@@ -3,24 +3,20 @@ const path = require('path')
 const adminRouters = require('./routes/admin')
 const shopRouters = require('./routes/shop')
 
+const expressHbs = require('express-handlebars')
 const app = express()
+app.engine('hbs', expressHbs({ layoutsDir: 'views/layouts/', defaultLayout: 'main-layout', extname: 'hbs' }))
+app.set('view engine', 'hbs')
+app.set('views', 'views')
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
-app.use((req, res, next) => {
-    console.log("in the middleware")
-    next()
-})
-app.use((req, res, next) => {
-    console.log("in the another middleware")
-    next()
-})
 
-app.use('/admin', adminRouters)
+app.use('/admin', adminRouters.routes)
 app.use(shopRouters)
 
 app.use((req, res, next) => {
-    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'))
+    res.render("404", { pageTitle: 'Page not found' })
 })
 
 
