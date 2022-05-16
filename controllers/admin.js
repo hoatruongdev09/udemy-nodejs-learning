@@ -3,18 +3,18 @@ const Product = require('../models/product')
 
 exports.getProducts = async (req, res, next) => {
     try {
-        const products = await Product.fetchAll()
+        const products = await Product.findAll()
         res.render('admin/products', {
             prods: products, pageTitle: 'Product', path: "/admin/products",
         })
     } catch (e) {
-        res.status(500).send(e.message)
+        res.status(500).send(e)
     }
 }
 exports.getEditProduct = async (req, res, next) => {
     try {
         const productId = req.query.productId
-        const product = await Product.findById(productId)
+        const product = await Product.findByPk(productId)
         res.render('admin/edit-product', {
             product, pageTitle: 'Edit Product', path: "/admin/edit-product",
         })
@@ -32,17 +32,32 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = async (req, res) => {
     const { title, imageUrl, description, price } = req.body
-    const product = new Product(title, imageUrl, description, price)
+    console.log(req.user)
     try {
-        await product.save()
+        await req.user.createProduct({ title, description, price, imageUrl })
+        // await Product.create({
+        //     title: title,
+        //     description: description,
+        //     price: price, imageUrl
+        // })
         res.redirect('/')
     } catch (e) {
-        res.status(500).send(e.message)
+        res.status(500).send(e)
     }
 }
 exports.postEditProduct = async (req, res) => {
     try {
-        await Product.updateProduct(req.body)
+        const { id, title, imageUrl, price, description } = req.body
+        await Product.update({
+            title: title,
+            imageUrl: imageUrl,
+            price: price,
+            description: description
+        }, {
+            where: {
+                id: id
+            }
+        })
         res.redirect('/admin/products')
     } catch (e) {
         res.status(500).send(e.message)
@@ -51,7 +66,7 @@ exports.postEditProduct = async (req, res) => {
 exports.postDeleteProduct = async (req, res) => {
     const { id } = req.body
     try {
-        await Product.deleteById(id)
+        await Product.destroy({ where: { id: id } })
         res.redirect('/admin/products')
     } catch (e) {
         res.status(500).send(e.message)
